@@ -7,7 +7,7 @@
 #define SIZE 100
 #include "grpwk20.h"
 
-const int ADDRESS = 18;
+const int ADDRESS = 19;
 const int CONTENT = 25 - ADDRESS;
 
 int result[1000000][4] = {};	// 復号結果の保存先
@@ -252,8 +252,8 @@ int retDecimal(char DNA)
 void viterbiDec(FILE *sfp, FILE *dfp)
 {
 	//本番は上
-	// int packetNum = 200000/(CONTENT - 2);
-	int packetNum = 10;
+	int packetNum = 200000/(CONTENT - 2);
+	// int packetNum = 10;
 	int maad = 0;
 	char nowDNA;
 	// for(int i = 0; (c = getc(sfp)) != '\n'; ++i)
@@ -330,8 +330,8 @@ int dec()
 	viterbiDec(sfp, dfp);
 	sute = getc(sfp);
 	viterbiDec(sfp, dfp);
-	// sute = getc(sfp);
-	// viterbiDec(sfp, dfp);
+	sute = getc(sfp);
+	viterbiDec(sfp, dfp);
 	// sute = getc(sfp);
 	// viterbiDec(sfp, dfp);
 	// sute = getc(sfp);
@@ -350,7 +350,7 @@ int dec()
 	// printf("%d\n", maad);
 	for (int i = 0; i < 200000/(CONTENT-2); ++i)
 	{
-		for (int j = 0; j < 5; ++j)
+		for (int j = 0; j < CONTENT-2; ++j)
 		{
 			fputc((char)('0' + result[i][j]), dfp);
 		}

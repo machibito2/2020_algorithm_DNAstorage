@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "grpwk20.h"
 
-const int ADDRESS = 18;
+const int ADDRESS = 19;
 const int CONTENT = 25 - ADDRESS;
 
 // 畳み込み符号化器の状態遷移関数(拘束長 = 3)
@@ -73,8 +73,8 @@ char retDNA(int stateOutput)
 void viterbiEnc(FILE *ofp, FILE *efp)
 {
 	// 本番は上
-	// int packetValue = 200000/(CONTENT - 2);
-	int packetValue = 10;
+	int packetValue = 200000/(CONTENT - 2);
+	// int packetValue = 10;
 	for (int packetNum = 0; packetNum < packetValue; ++packetNum)
 	{
 		int binary[32] = {};
@@ -161,6 +161,7 @@ int enc()
 		exit(1);
 	}
 
+	viterbiEnc(ofp, efp);
 	viterbiEnc(ofp, efp);
 	viterbiEnc(ofp, efp);
 
