@@ -330,22 +330,6 @@ int dec()
 	viterbiDec(sfp, dfp);
 	sute = getc(sfp);
 	viterbiDec(sfp, dfp);
-	sute = getc(sfp);
-	viterbiDec(sfp, dfp);
-	// sute = getc(sfp);
-	// viterbiDec(sfp, dfp);
-	// sute = getc(sfp);
-	// viterbiDec(sfp, dfp);
-	// sute = getc(sfp);
-	// viterbiDec(sfp, dfp);
-	// sute = getc(sfp);
-	// viterbiDec(sfp, dfp);
-	// sute = getc(sfp);
-	// viterbiDec(sfp, dfp);
-	// sute = getc(sfp);
-	// viterbiDec(sfp, dfp);
-	// sute = getc(sfp);
-	// viterbiDec(sfp, dfp);
 
 	// printf("%d\n", maad);
 	for (int i = 0; i < 200000/(CONTENT-2); ++i)

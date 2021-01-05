@@ -162,8 +162,6 @@ int enc()
 	}
 
 	viterbiEnc(ofp, efp);
-	viterbiEnc(ofp, efp);
-	viterbiEnc(ofp, efp);
 
 	fclose(ofp);
 	fclose(efp);
