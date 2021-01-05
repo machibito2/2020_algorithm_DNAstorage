@@ -2,6 +2,48 @@
 #include <stdlib.h>
 #include "grpwk20.h"
 
+// 畳み込み符号化器の状態遷移関数(拘束長 = 3)
+// int input   : 入力信号
+// int c_state : 現状態
+// int *result : 結果を格納する配列 
+	// result[0] : 状態遷移関数の出力
+	// result[1] : 状態遷移関数の次状態
+void* convolution_state_machine(int input, int c_state, int *result)
+{
+
+	switch(c_state)
+	{
+		// 出力(result[0])と次状態(result[1])の格納
+		// 三項演算子使い入力が0or1で結果を格納
+		case 0b00:
+			result[0] = (input == 0) ? 0b00: 0b11;
+			result[1] = (input == 0) ? 0b00: 0b01;
+		break;
+
+		case 0b01:
+			result[0] = (input == 0) ? 0b01: 0b10;
+			result[1] = (input == 0) ? 0b10: 0b11;
+		break;
+
+		case 0b10:
+			result[0] = (input == 0) ? 0b11: 0b00;
+			result[1] = (input == 0) ? 0b00: 0b01;
+		break;
+
+		case 0b11:
+			result[0] = (input == 0) ? 0b10: 0b01;
+			result[1] = (input == 0) ? 0b10: 0b11;
+		break;
+
+		default:
+			printf("%d, %d , Error!\n", input, c_state);
+		break;
+	}
+}
+
+// 0 1 2 3
+// A C G T
+
 int enc()
 {
 	FILE *ofp;
@@ -18,69 +60,53 @@ int enc()
 		exit(1);
 	}
 
-	unsigned char c1, c2, res;
-	int now, check;
-	int prevDNA;
-	char next[6];
-	char nextDNA[4][3] =
+	int result_in[2];
+	int nowState = 0b00;
+	char inputDNA;
+	for(int i=0; i<ORGDATA_LEN; i++)
 	{
-		{'C','G','T'},
-		{'G','T','A'},
-		{'T','A','C'},
-		{'A','C','G'},
-	};
-	prevDNA = 0;
-	for(int i=0; i<ORGDATA_LEN; i+=8)
-	{
-		now = 0;
-		for (int j = 7; j >= 0; --j)	//2進数から10進数に
+		inputDNA = getc(ofp);
+		switch (inputDNA)
 		{
-			c1 = getc(ofp);
-			// printf("%c", c1);
-			now += (1<<j) * (c1 == '1');
+			case 'A':
+				convolution_state_machine(0, nowState, result_in);
+				nowState = result_in[1];
+				printf("%d\n", result_in[0]);
+				convolution_state_machine(0, nowState, result_in);
+				nowState = result_in[1];
+				printf("%d\n", result_in[0]);
+				break;
+			case 'C':
+				convolution_state_machine(0, nowState, result_in);
+				nowState = result_in[1];
+				printf("%d\n", result_in[0]);
+				convolution_state_machine(1, nowState, result_in);
+				nowState = result_in[1];
+				printf("%d\n", result_in[0]);
+				break;
+			case 'G':
+				convolution_state_machine(1, nowState, result_in);
+				nowState = result_in[1];
+				printf("%d\n", result_in[0]);
+				convolution_state_machine(1, nowState, result_in);
+				nowState = result_in[1];
+				printf("%d\n", result_in[0]);
+				break;
+			case 'T':
+				convolution_state_machine(1, nowState, result_in);
+				nowState = result_in[1];
+				printf("%d\n", result_in[0]);
+				convolution_state_machine(1, nowState, result_in);
+				nowState = result_in[1];
+				printf("%d\n", result_in[0]);
+				break;
 		}
-		check = now;
-		// printf("%d\n", check);
-		// prevDNA = 0;
-		int san[6];
-		for (int j = 5; j >= 0; --j)	//10進数から3進数に
-		{
-			int nowMod = now % 3;
-			san[j] = nowMod;
-			// printf("%d", nowMod);
-			now /= 3;
-		}
-		// printf("\n");
-		for (int j = 0; j < 6; ++j)	//3進数をDNAに
-		{
-			next[j] = nextDNA[prevDNA][san[j]];
-			switch (next[j])
-			{
-				case 'A':
-					prevDNA = 0;
-					break;
-				case 'C':
-					prevDNA = 1;
-					break;
-				case 'G':
-					prevDNA = 2;
-					break;
-				case 'T':
-					prevDNA = 3;
-					break;
-			}
-		}
-		for (int j = 0; j < 6; ++j)
-		{
-			fputc(next[j], efp);
-		}
-		// fputc(nextDNA[prevDNA][0], efp);
-		// res = now;
-		// printf(" %d %s\n", check, next);
-		// fputc(res, efp);
+
+		// ファイルへの書き込み
+		// fputc([charの変数], efp);
 	}
-	res = '\n';
-	fputc(res, efp);
+	inputDNA = '\n';
+	fputc(inputDNA, efp);
 
 
 	fclose(ofp);
