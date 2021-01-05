@@ -84,7 +84,7 @@ int enc()
 	}
 
 	// 本番は100000
-	int packetValue = 100000;
+	int packetValue = 40000;
 	for (int packetNum = 0; packetNum < packetValue; ++packetNum)
 	{
 		int binary[32] = {};
@@ -99,7 +99,7 @@ int enc()
 		int result_in[2];
 
 		//アドレスの生成
-		for (int binI = 16; binI >= 0; --binI)
+		for (int binI = 15; binI >= 0; --binI)
 		{
 			convolution_state_machine(binary[binI], binNowState, result_in);
 			binNowState = result_in[1];
@@ -129,7 +129,7 @@ int enc()
 		char inputDNA;
 		int inputData;
 		// データの生成
-		for(int i=0; i < 4; i++)
+		for(int i=0; i < 5; i++)
 		{
 			inputDNA = getc(ofp);
 			inputData = inputDNA - '0';

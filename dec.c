@@ -8,9 +8,13 @@
 #include "grpwk20.h"
 
 // aとbのハミング距離を求める関数
-int hamming_d(int a, int b)
+double hamming_d(int a, int b)
 {
+
 	int tmp = a ^ b;
+	int retVa = ((tmp&0b10)>>1) + (tmp&0b01);
+	return sqrt(retVa);
+
 	int i = 0;
 
 	while (tmp)
@@ -56,7 +60,7 @@ void* convolution_state_machine(int input, int c_state, int *result)
 			result[1] = (input == 0) ? 0b10: 0b11;
 		break;
 
-		default: 
+		default:
 			printf("%d, %d , Error!\n", input, c_state);
 		break;
 	}
@@ -69,7 +73,7 @@ typedef struct
 	int flow[SIZE];
 
 	// ノードの重み(ハミング距離の計算などで使用)
-	int weight;
+	double weight;
 
 	// このノードが有効がどうか
 	// 初期値はfalse
@@ -95,7 +99,7 @@ void* viterbi(int *received_s, int input_l, int *est_in)
 	int node_l = sizeof(c_node)/sizeof(Node);
 
 	// 更新する前に一時的にノードの重みを保持する変数
-	int tmp_weight;
+	double tmp_weight;
 
 	// ノードが判定可能かチェックする
 	int is_updatable;
@@ -186,7 +190,7 @@ void* viterbi(int *received_s, int input_l, int *est_in)
 					n_node[n_state_in0].weight = tmp_weight;
 
 					// フローの更新
-					for (int j = 0; j < t; j++) n_node[n_state_in0].flow[j] = c_node[i].flow[j]; 
+					for (int j = 0; j < t; j++) n_node[n_state_in0].flow[j] = c_node[i].flow[j];
 					n_node[n_state_in0].flow[t] = 0;
 				}
 
@@ -254,7 +258,7 @@ int dec()
 	}
 
 	//本番は100000回パケットを読み取る
-	int packetNum = 100000;
+	int packetNum = 40000;
 	int maad = 0;
 	char nowDNA;
 	// for(int i = 0; (c = getc(sfp)) != '\n'; ++i)
@@ -262,8 +266,8 @@ int dec()
 	{
 		//アドレスの復号
 		int address = 0;
-		int received_address[19];
-		for (int binI = 0; binI < 19; ++binI)
+		int received_address[18];
+		for (int binI = 0; binI < 18; ++binI)
 		{
 			nowDNA = getc(sfp);
 			// printf("%c", nowDNA);
@@ -272,19 +276,19 @@ int dec()
 		}
 		// printf("\n");
 		int estAddress[SIZE];
-		viterbi(received_address, 19, estAddress);
-		for (int i = 0; i < 19 - 2; i++)
+		viterbi(received_address, 18, estAddress);
+		for (int i = 0; i < 18 - 2; i++)
 		{
 			// printf("%d", estAddress[i]);
-			address += estAddress[i] * (1<<(16-i));
+			address += estAddress[i] * (1<<(15-i));
 		}
 		// printf("\n");
 		// printf("%d\n", address);
 
 		//データの復号
 		int data;
-		int received_data[6];
-		for (int binI = 0; binI < 6; ++binI)
+		int received_data[7];
+		for (int binI = 0; binI < 7; ++binI)
 		{
 			nowDNA = getc(sfp);
 			// printf("%c", nowDNA);
@@ -293,8 +297,8 @@ int dec()
 		}
 		// printf("\n");
 		int estData[SIZE];
-		viterbi(received_data, 6, estData);
-		for (int i = 0; i < 6 - 2; i++)
+		viterbi(received_data, 7, estData);
+		for (int i = 0; i < 7 - 2; i++)
 		{
 			result[address][i] = estData[i];
 			// printf("%d", estData[i]);
@@ -303,9 +307,9 @@ int dec()
 		maad = (address > maad) ? address : maad;
 	}
 	// printf("%d\n", maad);
-	for (int i = 0; i < 2*100000/4; ++i)
+	for (int i = 0; i < 40000; ++i)
 	{
-		for (int j = 0; j < 4; ++j)
+		for (int j = 0; j < 5; ++j)
 		{
 			fputc((char)('0' + result[i][j]), dfp);
 		}
