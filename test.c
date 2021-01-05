@@ -220,7 +220,19 @@ void* viterbi(int *received_s, int input_l, int *est_in)
 int main()
 {
 	// 受信系列(ここを推定したい受信系列に変える)
-	int received_s[] = {0b11, 0b01, 0b00, 0b01, 0b11};
+	int received_s[] =
+	{
+		0b00,
+		0b10,
+		0b01,
+		0b00,
+		0b10,
+		0b10,
+		0b11,
+		0b00,
+		0b11,
+		0b10
+	};
 
 	// received_s配列の長さ
 	int input_l = sizeof(received_s) / sizeof(int);

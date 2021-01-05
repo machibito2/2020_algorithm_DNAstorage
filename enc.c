@@ -63,44 +63,18 @@ int enc()
 	int result_in[2];
 	int nowState = 0b00;
 	char inputDNA;
-	for(int i=0; i<ORGDATA_LEN; i++)
+	int inputData;
+	// for(int i=0; i<ORGDATA_LEN; i++)
+	for(int i=0; i<10; i++)
 	{
 		inputDNA = getc(ofp);
-		switch (inputDNA)
-		{
-			case 'A':
-				convolution_state_machine(0, nowState, result_in);
-				nowState = result_in[1];
-				printf("%d\n", result_in[0]);
-				convolution_state_machine(0, nowState, result_in);
-				nowState = result_in[1];
-				printf("%d\n", result_in[0]);
-				break;
-			case 'C':
-				convolution_state_machine(0, nowState, result_in);
-				nowState = result_in[1];
-				printf("%d\n", result_in[0]);
-				convolution_state_machine(1, nowState, result_in);
-				nowState = result_in[1];
-				printf("%d\n", result_in[0]);
-				break;
-			case 'G':
-				convolution_state_machine(1, nowState, result_in);
-				nowState = result_in[1];
-				printf("%d\n", result_in[0]);
-				convolution_state_machine(1, nowState, result_in);
-				nowState = result_in[1];
-				printf("%d\n", result_in[0]);
-				break;
-			case 'T':
-				convolution_state_machine(1, nowState, result_in);
-				nowState = result_in[1];
-				printf("%d\n", result_in[0]);
-				convolution_state_machine(1, nowState, result_in);
-				nowState = result_in[1];
-				printf("%d\n", result_in[0]);
-				break;
-		}
+		inputData = inputDNA - '0';
+		// printf("%d\n", inputData);
+
+		convolution_state_machine(inputData, nowState, result_in);
+		nowState = result_in[1];
+		printf("%d", (result_in[0]&0b10)>>1);
+		printf("%d\n", result_in[0]&0b01);
 
 		// ファイルへの書き込み
 		// fputc([charの変数], efp);
