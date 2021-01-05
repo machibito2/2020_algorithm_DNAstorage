@@ -7,14 +7,20 @@
 #define SIZE 100
 #include "grpwk20.h"
 
+const int ADDRESS = 18;
+const int CONTENT = 25 - ADDRESS;
+
 // aとbのハミング距離を求める関数
 double hamming_d(int a, int b)
 {
 
 	int tmp = a ^ b;
+
+	//ユークリッド距離みたいなやつ
 	int retVa = ((tmp&0b10)>>1) + (tmp&0b01);
 	return sqrt(retVa);
 
+	// ハミング距離
 	int i = 0;
 
 	while (tmp)
@@ -172,7 +178,7 @@ void* viterbi(int *received_s, int input_l, int *est_in)
 				n_node[n_state_in1].valid = 1;
 
 			}
-			else
+			else	// テールビットの処理
 			{
 				// 最後の2回の入力は0のみ
 				convolution_state_machine(0, i, result_in0);
@@ -258,7 +264,7 @@ int dec()
 	}
 
 	//本番は100000回パケットを読み取る
-	int packetNum = 40000;
+	int packetNum = 200000/(CONTENT - 2);
 	int maad = 0;
 	char nowDNA;
 	// for(int i = 0; (c = getc(sfp)) != '\n'; ++i)
@@ -266,8 +272,8 @@ int dec()
 	{
 		//アドレスの復号
 		int address = 0;
-		int received_address[18];
-		for (int binI = 0; binI < 18; ++binI)
+		int received_address[ADDRESS];
+		for (int binI = 0; binI < ADDRESS; ++binI)
 		{
 			nowDNA = getc(sfp);
 			// printf("%c", nowDNA);
@@ -276,19 +282,19 @@ int dec()
 		}
 		// printf("\n");
 		int estAddress[SIZE];
-		viterbi(received_address, 18, estAddress);
-		for (int i = 0; i < 18 - 2; i++)
+		viterbi(received_address, ADDRESS, estAddress);
+		for (int i = 0; i < ADDRESS - 2; i++)
 		{
 			// printf("%d", estAddress[i]);
-			address += estAddress[i] * (1<<(15-i));
+			address += estAddress[i] * (1<<(ADDRESS-2-1-i));
 		}
 		// printf("\n");
 		// printf("%d\n", address);
 
 		//データの復号
 		int data;
-		int received_data[7];
-		for (int binI = 0; binI < 7; ++binI)
+		int received_data[CONTENT];
+		for (int binI = 0; binI < CONTENT; ++binI)
 		{
 			nowDNA = getc(sfp);
 			// printf("%c", nowDNA);
@@ -297,8 +303,8 @@ int dec()
 		}
 		// printf("\n");
 		int estData[SIZE];
-		viterbi(received_data, 7, estData);
-		for (int i = 0; i < 7 - 2; i++)
+		viterbi(received_data, CONTENT, estData);
+		for (int i = 0; i < CONTENT - 2; i++)
 		{
 			result[address][i] = estData[i];
 			// printf("%d", estData[i]);
@@ -307,7 +313,7 @@ int dec()
 		maad = (address > maad) ? address : maad;
 	}
 	// printf("%d\n", maad);
-	for (int i = 0; i < 40000; ++i)
+	for (int i = 0; i < 200000/(CONTENT-2); ++i)
 	{
 		for (int j = 0; j < 5; ++j)
 		{
@@ -325,6 +331,7 @@ int dec()
 int main()
 {
 	dec();
+
 	// // 受信系列(ここを推定したい受信系列に変える)
 	// int received_s[] =
 	// {

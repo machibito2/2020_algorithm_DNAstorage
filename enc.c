@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include "grpwk20.h"
 
+const int ADDRESS = 18;
+const int CONTENT = 25 - ADDRESS;
+
 // 畳み込み符号化器の状態遷移関数(拘束長 = 3)
 // int input   : 入力信号
 // int c_state : 現状態
@@ -84,7 +87,7 @@ int enc()
 	}
 
 	// 本番は100000
-	int packetValue = 40000;
+	int packetValue = 200000/(CONTENT - 2);
 	for (int packetNum = 0; packetNum < packetValue; ++packetNum)
 	{
 		int binary[32] = {};
@@ -99,7 +102,7 @@ int enc()
 		int result_in[2];
 
 		//アドレスの生成
-		for (int binI = 15; binI >= 0; --binI)
+		for (int binI = ADDRESS-2-1; binI >= 0; --binI)
 		{
 			convolution_state_machine(binary[binI], binNowState, result_in);
 			binNowState = result_in[1];
@@ -122,14 +125,11 @@ int enc()
 		}
 		// printf("\n");
 
-
-
-
 		int nowState = 0b00;
 		char inputDNA;
 		int inputData;
 		// データの生成
-		for(int i=0; i < 5; i++)
+		for(int i=0; i < CONTENT-2; i++)
 		{
 			inputDNA = getc(ofp);
 			inputData = inputDNA - '0';
