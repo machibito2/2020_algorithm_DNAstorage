@@ -41,6 +41,29 @@ void* convolution_state_machine(int input, int c_state, int *result)
 	}
 }
 
+
+
+char retDNA(int stateOutput)
+{
+	char retValue;
+	switch (stateOutput)
+	{
+		case 0b00:
+			retValue = 'A';
+			break;
+		case 0b01:
+			retValue = 'C';
+			break;
+		case 0b10:
+			retValue = 'G';
+			break;
+		case 0b11:
+			retValue = 'T';
+			break;
+	}
+	return retValue;
+}
+
 // 0 1 2 3
 // A C G T
 
@@ -60,27 +83,79 @@ int enc()
 		exit(1);
 	}
 
-	int result_in[2];
-	int nowState = 0b00;
-	char inputDNA;
-	int inputData;
-	// for(int i=0; i<ORGDATA_LEN; i++)
-	for(int i=0; i<10; i++)
+	// 本番は100000
+	int packetValue = 100000;
+	for (int packetNum = 0; packetNum < packetValue; ++packetNum)
 	{
-		inputDNA = getc(ofp);
-		inputData = inputDNA - '0';
-		// printf("%d\n", inputData);
+		int binary[32] = {};
+		int decimal = packetNum;
+		int binI;
+		for (binI=0;decimal>0;binI++)
+		{
+			binary[binI] = decimal % 2;
+			decimal = decimal / 2;
+		}
+		int binNowState = 0b00;
+		int result_in[2];
 
-		convolution_state_machine(inputData, nowState, result_in);
-		nowState = result_in[1];
-		printf("%d", (result_in[0]&0b10)>>1);
-		printf("%d\n", result_in[0]&0b01);
+		//アドレスの生成
+		for (int binI = 16; binI >= 0; --binI)
+		{
+			convolution_state_machine(binary[binI], binNowState, result_in);
+			binNowState = result_in[1];
+			// printf("%d", result_in[0]>>1);
+			// printf("%d\n", result_in[0]&0b01);
 
-		// ファイルへの書き込み
-		// fputc([charの変数], efp);
+			// ファイルへの書き込み
+			fputc(retDNA(result_in[0]), efp);
+		}
+		//アドレスのtail bit
+		for (int BinI = 0; BinI < 2; ++BinI)
+		{
+			convolution_state_machine(0, binNowState, result_in);
+			binNowState = result_in[1];
+			// printf("%d", result_in[0]>>1);
+			// printf("%d\n", result_in[0]&0b01);
+
+			// ファイルへの書き込み
+			fputc(retDNA(result_in[0]), efp);
+		}
+		// printf("\n");
+
+
+
+
+		int nowState = 0b00;
+		char inputDNA;
+		int inputData;
+		// データの生成
+		for(int i=0; i < 4; i++)
+		{
+			inputDNA = getc(ofp);
+			inputData = inputDNA - '0';
+			// printf("%d\n", inputData);
+
+			convolution_state_machine(inputData, nowState, result_in);
+			nowState = result_in[1];
+			// printf("%d", result_in[0]>>1);
+			// printf("%d\n", result_in[0]&0b01);
+
+			// ファイルへの書き込み
+			fputc(retDNA(result_in[0]), efp);
+		}
+		// データのtail bit
+		for (int BinI = 0; BinI < 2; ++BinI)
+		{
+			convolution_state_machine(0, nowState, result_in);
+			nowState = result_in[1];
+			// printf("%d", result_in[0]>>1);
+			// printf("%d\n", result_in[0]&0b01);
+
+			// ファイルへの書き込み
+			fputc(retDNA(result_in[0]), efp);
+		}
 	}
-	inputDNA = '\n';
-	fputc(inputDNA, efp);
+	fputc('\n', efp);
 
 
 	fclose(ofp);

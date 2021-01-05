@@ -223,15 +223,11 @@ int main()
 	int received_s[] =
 	{
 		0b00,
-		0b10,
-		0b01,
-		0b00,
+		0b11,
 		0b10,
 		0b10,
 		0b11,
-		0b00,
-		0b11,
-		0b10
+		0b00
 	};
 
 	// received_s配列の長さ
