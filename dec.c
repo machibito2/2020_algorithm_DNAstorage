@@ -10,6 +10,10 @@
 const int ADDRESS = 18;
 const int CONTENT = 25 - ADDRESS;
 
+int result[1000000][4] = {};	// 復号結果の保存先
+double minWeight[1000000];			// アドレスがかぶったときの判断用
+
+
 // aとbのハミング距離を求める関数
 double hamming_d(int a, int b)
 {
@@ -90,7 +94,7 @@ typedef struct
 // int *received_s : ビタビ複号により複号したい受信系列
 // int input_l     : 受信系列の長さ
 // int *est_in     : ビタビ複号により推測した送信系列
-void* viterbi(int *received_s, int input_l, int *est_in)
+double viterbi(int *received_s, int input_l, int *est_in)
 {
 
 	// 現在のノード(c_node)と次のノード(n_node)
@@ -221,7 +225,7 @@ void* viterbi(int *received_s, int input_l, int *est_in)
 	for(int i = 0; i < input_l; i++){
 		est_in[i] = c_node[0].flow[i];
 	}
-
+	return c_node[0].weight;
 }
 
 int retDecimal(char DNA)
@@ -245,26 +249,11 @@ int retDecimal(char DNA)
 	return retValue;
 }
 
-int result[1000000][4] = {};
-
-int dec()
+void viterbiDec(FILE *sfp, FILE *dfp)
 {
-	FILE *sfp;
-	if((sfp = fopen(SEQDATA, "r")) ==NULL)
-	{
-		fprintf(stderr, "cannot open %s\n", SEQDATA);
-		exit(1);
-	}
-
-	FILE *dfp;
-	if((dfp = fopen(DECDATA, "w")) ==NULL)
-	{
-		fprintf(stderr, "cannot open %s\n", DECDATA);
-		exit(1);
-	}
-
-	//本番は100000回パケットを読み取る
-	int packetNum = 200000/(CONTENT - 2);
+	//本番は上
+	// int packetNum = 200000/(CONTENT - 2);
+	int packetNum = 10;
 	int maad = 0;
 	char nowDNA;
 	// for(int i = 0; (c = getc(sfp)) != '\n'; ++i)
@@ -282,7 +271,7 @@ int dec()
 		}
 		// printf("\n");
 		int estAddress[SIZE];
-		viterbi(received_address, ADDRESS, estAddress);
+		double kakunin = viterbi(received_address, ADDRESS, estAddress);
 		for (int i = 0; i < ADDRESS - 2; i++)
 		{
 			// printf("%d", estAddress[i]);
@@ -290,6 +279,8 @@ int dec()
 		}
 		// printf("\n");
 		// printf("%d\n", address);
+		// printf("\n");
+
 
 		//データの復号
 		int data;
@@ -303,15 +294,59 @@ int dec()
 		}
 		// printf("\n");
 		int estData[SIZE];
-		viterbi(received_data, CONTENT, estData);
-		for (int i = 0; i < CONTENT - 2; i++)
+		kakunin += viterbi(received_data, CONTENT, estData);
+		if (minWeight[address] > kakunin)
 		{
-			result[address][i] = estData[i];
-			// printf("%d", estData[i]);
+			minWeight[address] = kakunin;
+			for (int i = 0; i < CONTENT - 2; i++)
+			{
+				result[address][i] = estData[i];
+				// printf("%d", estData[i]);
+			}
 		}
 		// printf("\n\n");
 		maad = (address > maad) ? address : maad;
 	}
+}
+
+
+int dec()
+{
+	FILE *sfp;
+	if((sfp = fopen(SEQDATA, "r")) ==NULL)
+	{
+		fprintf(stderr, "cannot open %s\n", SEQDATA);
+		exit(1);
+	}
+
+	FILE *dfp;
+	if((dfp = fopen(DECDATA, "w")) ==NULL)
+	{
+		fprintf(stderr, "cannot open %s\n", DECDATA);
+		exit(1);
+	}
+
+	char sute;
+	viterbiDec(sfp, dfp);
+	sute = getc(sfp);
+	viterbiDec(sfp, dfp);
+	// sute = getc(sfp);
+	// viterbiDec(sfp, dfp);
+	// sute = getc(sfp);
+	// viterbiDec(sfp, dfp);
+	// sute = getc(sfp);
+	// viterbiDec(sfp, dfp);
+	// sute = getc(sfp);
+	// viterbiDec(sfp, dfp);
+	// sute = getc(sfp);
+	// viterbiDec(sfp, dfp);
+	// sute = getc(sfp);
+	// viterbiDec(sfp, dfp);
+	// sute = getc(sfp);
+	// viterbiDec(sfp, dfp);
+	// sute = getc(sfp);
+	// viterbiDec(sfp, dfp);
+
 	// printf("%d\n", maad);
 	for (int i = 0; i < 200000/(CONTENT-2); ++i)
 	{
@@ -330,6 +365,10 @@ int dec()
 
 int main()
 {
+	for (int i = 0; i < 1000000; ++i)
+	{
+		minWeight[i] = (1<<30)-1;
+	}
 	dec();
 
 	// // 受信系列(ここを推定したい受信系列に変える)

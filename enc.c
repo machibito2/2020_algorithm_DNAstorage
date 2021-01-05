@@ -70,24 +70,11 @@ char retDNA(int stateOutput)
 // 0 1 2 3
 // A C G T
 
-int enc()
+void viterbiEnc(FILE *ofp, FILE *efp)
 {
-	FILE *ofp;
-	if((ofp = fopen(ORGDATA, "r")) ==NULL)
-	{
-		fprintf(stderr, "cannot open %s\n", ORGDATA);
-		exit(1);
-	}
-
-	FILE *efp;
-	if((efp = fopen(ENCDATA, "w")) ==NULL)
-	{
-		fprintf(stderr, "cannot open %s\n", ENCDATA);
-		exit(1);
-	}
-
-	// 本番は100000
-	int packetValue = 200000/(CONTENT - 2);
+	// 本番は上
+	// int packetValue = 200000/(CONTENT - 2);
+	int packetValue = 10;
 	for (int packetNum = 0; packetNum < packetValue; ++packetNum)
 	{
 		int binary[32] = {};
@@ -132,7 +119,7 @@ int enc()
 		for(int i=0; i < CONTENT-2; i++)
 		{
 			inputDNA = getc(ofp);
-			inputData = inputDNA - '0';
+			inputData = (int)(inputDNA - '0');
 			// printf("%d\n", inputData);
 
 			convolution_state_machine(inputData, nowState, result_in);
@@ -156,7 +143,26 @@ int enc()
 		}
 	}
 	fputc('\n', efp);
+}
 
+int enc()
+{
+	FILE *ofp;
+	if((ofp = fopen(ORGDATA, "r")) ==NULL)
+	{
+		fprintf(stderr, "cannot open %s\n", ORGDATA);
+		exit(1);
+	}
+
+	FILE *efp;
+	if((efp = fopen(ENCDATA, "w")) ==NULL)
+	{
+		fprintf(stderr, "cannot open %s\n", ENCDATA);
+		exit(1);
+	}
+
+	viterbiEnc(ofp, efp);
+	viterbiEnc(ofp, efp);
 
 	fclose(ofp);
 	fclose(efp);
