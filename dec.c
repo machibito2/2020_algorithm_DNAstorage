@@ -11,7 +11,7 @@ const int ADDRESS = 19;
 const int CONTENT = 25 - ADDRESS;
 
 int result[1000000][4] = {};	// 復号結果の保存先
-double minWeight[1000000];			// アドレスがかぶったときの判断用
+double minWeight[1000000];		// アドレスがかぶったときの判断用
 
 
 // aとbのハミング距離を求める関数
@@ -20,27 +20,16 @@ double hamming_d(int a, int b)
 
 	int tmp = a ^ b;
 
-	//ユークリッド距離みたいなやつ
-	int retVa = ((tmp&0b10)>>1) + (tmp&0b01);
+	//2つ間違える可能性は十分に低いから2つ間違えたときに少し距離を小さくする
+	double retVa = ((tmp&0b10)>>1) + (tmp&0b01);
 	return sqrt(retVa);
 
-	// ハミング距離
-	int i = 0;
-
-	while (tmp)
-	{
-		// 立っている最下位ビットを消す
-		tmp &= tmp - 1;
-		i++;
-	}
-
-	return i;
 }
 
 // 畳み込み符号化器の状態遷移関数(拘束長 = 3)
 // int input   : 入力信号
 // int c_state : 現状態
-// int *result : 結果を格納する配列 
+// int *result : 結果を格納する配列
 	// result[0] : 状態遷移関数の出力
 	// result[1] : 状態遷移関数の次状態
 void* convolution_state_machine(int input, int c_state, int *result)
@@ -251,8 +240,10 @@ int retDecimal(char DNA)
 
 void viterbiDec(FILE *sfp, FILE *dfp)
 {
-	//本番は上
+	char sute;
+	// 本番
 	int packetNum = 200000/(CONTENT - 2);
+	// テスト用(10個のパケット)
 	// int packetNum = 10;
 	int maad = 0;
 	char nowDNA;
@@ -307,6 +298,7 @@ void viterbiDec(FILE *sfp, FILE *dfp)
 		// printf("\n\n");
 		maad = (address > maad) ? address : maad;
 	}
+	sute = getc(sfp);
 }
 
 
@@ -326,9 +318,7 @@ int dec()
 		exit(1);
 	}
 
-	char sute;
 	viterbiDec(sfp, dfp);
-	sute = getc(sfp);
 	viterbiDec(sfp, dfp);
 
 	// printf("%d\n", maad);

@@ -74,6 +74,7 @@ void viterbiEnc(FILE *ofp, FILE *efp)
 {
 	// 本番は上
 	int packetValue = 200000/(CONTENT - 2);
+	// テスト用(10個のパケット)
 	// int packetValue = 10;
 	for (int packetNum = 0; packetNum < packetValue; ++packetNum)
 	{
@@ -142,7 +143,7 @@ void viterbiEnc(FILE *ofp, FILE *efp)
 			fputc(retDNA(result_in[0]), efp);
 		}
 	}
-	fputc('\n', efp);
+	fputc('\n', efp);	// おわり
 }
 
 int enc()
