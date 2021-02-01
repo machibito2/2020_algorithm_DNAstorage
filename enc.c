@@ -1,176 +1,127 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "grpwk20.h"
+#define Rep 5
 
-const int ADDRESS = 19;
-const int CONTENT = 25 - ADDRESS;
+unsigned char bef = 'A';
 
-// 畳み込み符号化器の状態遷移関数(拘束長 = 3)
-// int input   : 入力信号
-// int c_state : 現状態
-// int *result : 結果を格納する配列 
-	// result[0] : 状態遷移関数の出力
-	// result[1] : 状態遷移関数の次状態
-void* convolution_state_machine(int input, int c_state, int *result)
-{
+void transdna(int n);
 
-	switch(c_state)
-	{
-		// 出力(result[0])と次状態(result[1])の格納
-		// 三項演算子使い入力が0or1で結果を格納
-		case 0b00:
-			result[0] = (input == 0) ? 0b00: 0b11;
-			result[1] = (input == 0) ? 0b00: 0b01;
-		break;
+int enc(){
+  FILE *ofp;
+  if((ofp = fopen(ORGDATA, "r")) ==NULL){
+    fprintf(stderr, "cannot open %s\n", ORGDATA);
+    exit(1);
+  }
 
-		case 0b01:
-			result[0] = (input == 0) ? 0b01: 0b10;
-			result[1] = (input == 0) ? 0b10: 0b11;
-		break;
+  FILE *efp;
+  if((efp = fopen(ENCDATA, "w")) ==NULL){
+    fprintf(stderr, "cannot open %s\n", ENCDATA);
+    exit(1);
+  }
 
-		case 0b10:
-			result[0] = (input == 0) ? 0b11: 0b00;
-			result[1] = (input == 0) ? 0b00: 0b01;
-		break;
+  unsigned char c1, c2, res;
+  int i, n;
+  for(i=0; i<ORGDATA_LEN; i++){
+    c1 = getc(ofp);
+    switch( ( (c1 & 0x1) << 7) >> 7){
+    case 0:
+      c2 = getc(ofp);
+      switch(c2 & 0x1){
+        case 0:
+        n = 0;
+        break;
+        case 1:
+        n = 1;
+        break;
+        default:
+        break;
+      }
+      i++;
+      break;
+    case 1:
+      n = 2;
+      break;
+    default:
+      break;
+    }
+    transdna(n);
+    for(int count=0; count < Rep; count++){
+      fputc(bef, efp);
+    }
+  }
+  res = '\n';
+  fputc(res, efp);
 
-		case 0b11:
-			result[0] = (input == 0) ? 0b10: 0b01;
-			result[1] = (input == 0) ? 0b10: 0b11;
-		break;
-
-		default:
-			printf("%d, %d , Error!\n", input, c_state);
-		break;
-	}
+  fclose(ofp);
+  fclose(efp);
+  return(0);
+}
+/*
+ \ | 0 | 1 | 2 |
+ A | C | G | T |
+ C | G | T | A |
+ G | T | A | C |
+ T | A | C | G |
+*/
+void transdna(int n){
+  switch(bef){
+    case 'A':
+      switch(n){
+        case 0:
+        bef = 'C';
+        break;
+        case 1:
+        bef = 'G';
+        break;
+        case 2:
+        bef = 'T';
+        break;
+      }
+    break;
+    case 'C':
+      switch(n){
+        case 0:
+        bef = 'G';
+        break;
+        case 1:
+        bef = 'T';
+        break;
+        case 2:
+        bef = 'A';
+        break;
+      }
+    break;
+    case 'G':
+      switch(n){
+        case 0:
+        bef = 'T';
+        break;
+        case 1:
+        bef = 'A';
+        break;
+        case 2:
+        bef = 'C';
+        break;
+      }
+    break;
+    case 'T':
+      switch(n){
+        case 0:
+        bef = 'A';
+        break;
+        case 1:
+        bef = 'C';
+        break;
+        case 2:
+        bef = 'G';
+        break;
+      }
+    break;
+  }
 }
 
-
-
-char retDNA(int stateOutput)
-{
-	char retValue;
-	switch (stateOutput)
-	{
-		case 0b00:
-			retValue = 'A';
-			break;
-		case 0b01:
-			retValue = 'C';
-			break;
-		case 0b10:
-			retValue = 'G';
-			break;
-		case 0b11:
-			retValue = 'T';
-			break;
-	}
-	return retValue;
-}
-
-// 0 1 2 3
-// A C G T
-
-void viterbiEnc(FILE *ofp, FILE *efp)
-{
-	// 本番は上
-	int packetValue = 200000/(CONTENT - 2);
-	// テスト用(10個のパケット)
-	// int packetValue = 10;
-	for (int packetNum = 0; packetNum < packetValue; ++packetNum)
-	{
-		int binary[32] = {};
-		int decimal = packetNum;
-		int binI;
-		for (binI=0;decimal>0;binI++)
-		{
-			binary[binI] = decimal % 2;
-			decimal = decimal / 2;
-		}
-		int binNowState = 0b00;
-		int result_in[2];
-
-		//アドレスの生成
-		for (int binI = ADDRESS-2-1; binI >= 0; --binI)
-		{
-			convolution_state_machine(binary[binI], binNowState, result_in);
-			binNowState = result_in[1];
-			// printf("%d", result_in[0]>>1);
-			// printf("%d\n", result_in[0]&0b01);
-
-			// ファイルへの書き込み
-			fputc(retDNA(result_in[0]), efp);
-		}
-		//アドレスのtail bit
-		for (int BinI = 0; BinI < 2; ++BinI)
-		{
-			convolution_state_machine(0, binNowState, result_in);
-			binNowState = result_in[1];
-			// printf("%d", result_in[0]>>1);
-			// printf("%d\n", result_in[0]&0b01);
-
-			// ファイルへの書き込み
-			fputc(retDNA(result_in[0]), efp);
-		}
-		// printf("\n");
-
-		int nowState = 0b00;
-		char inputDNA;
-		int inputData;
-		// データの生成
-		for(int i=0; i < CONTENT-2; i++)
-		{
-			inputDNA = getc(ofp);
-			inputData = (int)(inputDNA - '0');
-			// printf("%d\n", inputData);
-
-			convolution_state_machine(inputData, nowState, result_in);
-			nowState = result_in[1];
-			// printf("%d", result_in[0]>>1);
-			// printf("%d\n", result_in[0]&0b01);
-
-			// ファイルへの書き込み
-			fputc(retDNA(result_in[0]), efp);
-		}
-		// データのtail bit
-		for (int BinI = 0; BinI < 2; ++BinI)
-		{
-			convolution_state_machine(0, nowState, result_in);
-			nowState = result_in[1];
-			// printf("%d", result_in[0]>>1);
-			// printf("%d\n", result_in[0]&0b01);
-
-			// ファイルへの書き込み
-			fputc(retDNA(result_in[0]), efp);
-		}
-	}
-	fputc('\n', efp);	// おわり
-}
-
-int enc()
-{
-	FILE *ofp;
-	if((ofp = fopen(ORGDATA, "r")) ==NULL)
-	{
-		fprintf(stderr, "cannot open %s\n", ORGDATA);
-		exit(1);
-	}
-
-	FILE *efp;
-	if((efp = fopen(ENCDATA, "w")) ==NULL)
-	{
-		fprintf(stderr, "cannot open %s\n", ENCDATA);
-		exit(1);
-	}
-
-	viterbiEnc(ofp, efp);
-
-	fclose(ofp);
-	fclose(efp);
-	return(0);
-}
-
-int main()
-{
-	enc();
-	return(0);
+int main(){
+  enc();
+  return(0);
 }

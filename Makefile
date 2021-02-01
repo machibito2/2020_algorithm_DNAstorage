@@ -6,7 +6,7 @@ CFLAGS = -Wall
 all: gen enc syn seq dec eval
 
 .c:
-	$(CC) $(CFLAGS) -o $@ $< -lm
+	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
 	rm  $(PROGS) $(DATA)
