@@ -6,3 +6,6 @@
 
 # 性能
 あまり良くない(ビットの誤り数が多くなると正しく復号できないから)
+
+# 参考
+https://gist.github.com/koyo-miyamura/dfb9741810eed17520ef45493f08fc77
